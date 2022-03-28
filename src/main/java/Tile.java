@@ -1,23 +1,17 @@
-public class Tile {
-    private int no;
-    private static final int COLOR_PER_COLOR = 13;
-    enum COLOR{
-        YELLOW,
-        BLUE,
-        BLACK,
-        RED,
-        FAKE_JOKER
-    }
+import java.util.Arrays;
 
-    public int getNo() {
-        return no;
-    }
+/**
+ * This class is deprecated.
+ */
+public class Tile{
+    //static properties, methods and enumerations
+    public static final int TILE_PER_COLOR = 13;
 
-    public void setNo(int no) {
-        this.no = no;
-    }
-    public COLOR getColor() throws WrongColorException{
-        int colorNo = no / COLOR_PER_COLOR;
+    public static COLOR getColor(int no) throws WrongColorException{
+        if (no == maxNumber())
+            return COLOR.FAKE_JOKER;
+        int colorNo = no / TILE_PER_COLOR;
+
         return switch (colorNo) {
             case 0 -> COLOR.YELLOW;
             case 1 -> COLOR.BLUE;
@@ -25,6 +19,39 @@ public class Tile {
             case 3 -> COLOR.RED;
             default -> throw new WrongColorException(no);
         };
+    }
+    public static int maxNumber(){
+        return TILE_PER_COLOR * (COLOR.values().length - 1);
+    }
 
+
+    public enum COLOR{
+        YELLOW,
+        BLUE,
+        BLACK,
+        RED,
+        FAKE_JOKER
+    }
+    //properties
+    private int no;
+
+    //constructors
+    public Tile(int no){
+        this.no = no;
+    }
+    public Tile(int tileValue, COLOR color) throws WrongColorException{
+        int no = TILE_PER_COLOR * Arrays.asList(COLOR.values()).indexOf(color) + tileValue;
+        if (no < 0 || no > maxNumber())
+            throw new WrongColorException(no);
+        this.no = no;
+    }
+
+    //methods
+    public int getNo() {
+        return no;
+    }
+
+    public void setNo(int no) {
+        this.no = no;
     }
 }
