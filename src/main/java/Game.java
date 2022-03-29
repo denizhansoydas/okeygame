@@ -5,26 +5,30 @@ public class Game {
     public static int TILE_COUNT = 106;
 
     //properties
-    private Integer[] tiles;
+    //private Integer[] tiles;
+    private Tile[] tiles;
 
     //constructors
     Game(){
-        tiles = new Integer[TILE_COUNT];
+        tiles = new Tile[TILE_COUNT];
         for(int i = 0; i < TILE_COUNT / 2; i++){
-            tiles[i] = tiles[TILE_COUNT / 2 + i] = i; //There are two instances of a tile. Therefore, the array will be like: [0,...52] [0,...,52]
+            //There are two instances of a tile. Therefore, the array will be like: [0,...52] [0,...,52]
+            tiles[i] = new Tile(i);
+            tiles[TILE_COUNT / 2 + i] = new Tile(i);
         }
     }
 
-    public Integer[] getTiles() {
+    public Tile[] getTiles() {
         return tiles;
     }
 
-    public void setTiles(Integer[] tiles) {
+    public void setTiles(Tile[] tiles) {
         this.tiles = tiles;
     }
     public void shuffle(){
-        List<Integer> intList = Arrays.asList(tiles);
-        Collections.shuffle(intList);
-        intList.toArray(tiles);
+        List<Tile> tiles_temp = Arrays.asList(tiles);
+//        List<Integer> intList = Arrays.asList(tiles);
+//        Collections.shuffle(intList);
+//        intList.toArray(tiles);
     }
 }
