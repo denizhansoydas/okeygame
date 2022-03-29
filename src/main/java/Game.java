@@ -10,6 +10,9 @@ public class Game {
     //constructors
     Game(){
         tiles = new Integer[TILE_COUNT];
+        for(int i = 0; i < TILE_COUNT / 2; i++){
+            tiles[i] = tiles[TILE_COUNT / 2 + i] = i; //There are two instances of a tile. Therefore, the array will be like: [0,...52] [0,...,52]
+        }
     }
 
     public Integer[] getTiles() {
