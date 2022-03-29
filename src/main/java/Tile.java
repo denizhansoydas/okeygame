@@ -23,8 +23,6 @@ public class Tile{
     public static int maxNumber(){
         return TILE_PER_COLOR * (COLOR.values().length - 1);
     }
-
-
     public enum COLOR{
         YELLOW,
         BLUE,
@@ -36,8 +34,11 @@ public class Tile{
     private int no;
 
     //constructors
-    public Tile(int no){
-        this.no = no;
+    public Tile(int no) throws WrongColorException{
+        if (no >= 0 && no <= 52)
+            this.no = no;
+        else
+            throw new WrongColorException(no);
     }
     public Tile(int tileValue, COLOR color) throws WrongColorException{
         int no = TILE_PER_COLOR * Arrays.asList(COLOR.values()).indexOf(color) + tileValue;
@@ -50,8 +51,17 @@ public class Tile{
     public int getNo() {
         return no;
     }
-
+    public int getValue(){
+        return no % TILE_PER_COLOR + 1;
+    }
     public void setNo(int no) {
         this.no = no;
+    }
+    public String toString(){
+        try {
+            return "No: " + no + " Color: " + getColor(no).toString() + " Value: " + getValue();
+        } catch (WrongColorException e) {
+            return "No: " + no + " Color: " + "UNKNOWN" + " Value: " + getValue();
+        }
     }
 }
