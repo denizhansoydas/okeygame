@@ -27,8 +27,7 @@ public class Game {
     }
     public void shuffle(){
         List<Tile> tiles_temp = Arrays.asList(tiles);
-//        List<Integer> intList = Arrays.asList(tiles);
-//        Collections.shuffle(intList);
-//        intList.toArray(tiles);
+        Collections.shuffle(tiles_temp);
+        tiles_temp.toArray(tiles);
     }
 }
