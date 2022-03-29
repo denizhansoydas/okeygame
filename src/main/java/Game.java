@@ -2,12 +2,12 @@ import java.util.*;
 
 public class Game {
     //static properties and methods
-    public static int TILE_COUNT = 106;
+    public static final int TILE_COUNT = 106;
+    public static final int PLAYER_COUNT = 4;
 
     //properties
-    //private Integer[] tiles;
     private Tile[] tiles;
-
+    private Player[] players;
     //constructors
     Game(){
         tiles = new Tile[TILE_COUNT];
@@ -16,6 +16,9 @@ public class Game {
             tiles[i] = new Tile(i);
             tiles[TILE_COUNT / 2 + i] = new Tile(i);
         }
+        players = new Player[PLAYER_COUNT];
+        for(int i = 0; i < PLAYER_COUNT; i++)
+            players[i] = new Player();
     }
 
     public Tile[] getTiles() {
@@ -29,5 +32,13 @@ public class Game {
         List<Tile> tiles_temp = Arrays.asList(tiles);
         Collections.shuffle(tiles_temp);
         tiles_temp.toArray(tiles);
+    }
+
+    public Player[] getPlayers() {
+        return players;
+    }
+
+    public void setPlayers(Player[] players) {
+        this.players = players;
     }
 }
