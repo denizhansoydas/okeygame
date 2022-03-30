@@ -79,4 +79,7 @@ public class Tile{
     public boolean sameValue(Tile tile){
         return getValue() == tile.getValue();
     }
+    public boolean isFakeJoker(){
+        return getColor() == COLOR.FAKE_JOKER;
+    }
 }
