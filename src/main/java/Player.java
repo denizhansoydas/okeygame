@@ -15,4 +15,13 @@ public class Player {
     public void setBoard(LinkedList<Tile> board) {
         this.board = board;
     }
+    public void takeTile(Tile tile){
+        board.add(tile);
+    }
+    public void discardTile(Tile tile){
+        board.remove(tile);
+    }
+    public void discardTile(int tileIndex){
+        board.remove(tileIndex);
+    }
 }
