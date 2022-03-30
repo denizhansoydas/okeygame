@@ -4,6 +4,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public class Game {
     //static properties and methods
     public static final int START_TILE_COUNT = 106;
+    public static final int TILES_PER_PLAYER = 14;
     public static final int PLAYER_COUNT = 4;
 
     //properties
@@ -86,7 +87,7 @@ public class Game {
         return faceUpTile.getColor();
     }
     public void distribute(){
-        for(int i = 0; i < Tile.TILES_PER_COLOR; i++){
+        for(int i = 0; i < TILES_PER_PLAYER; i++){
             for(Player player: players){
                 player.takeTile(shuffledTiles.remove(0));
             }
