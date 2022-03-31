@@ -82,7 +82,7 @@ public class Tile{
     public boolean isFakeJoker(){
         return getColor() == Color.FAKE_JOKER;
     }
-    public int getColorIndex(Color color){
+    public static int getColorIndex(Color color){
         return Arrays.asList(Color.values()).indexOf(color);
     }
 }
