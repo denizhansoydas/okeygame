@@ -83,7 +83,7 @@ public class Game {
     public int getJokerValue(){
         return faceUpTile.getValue() == Tile.TILES_PER_COLOR ? 1 : faceUpTile.getValue() + 1;
     }
-    public Tile.COLOR getJokerColor(){
+    public Tile.Color getJokerColor(){
         return faceUpTile.getColor();
     }
     public void distribute(){
