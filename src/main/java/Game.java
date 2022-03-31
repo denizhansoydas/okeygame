@@ -33,7 +33,7 @@ public class Game {
         distribute();
 
         for (Player player : players) {
-            System.out.println("A player has:" + player.getBoard());
+            System.out.println("A player has" + player.getBoard().size() + " tiles:" + player.getBoard());
         }
     }
 
