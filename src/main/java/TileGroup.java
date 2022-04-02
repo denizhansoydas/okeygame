@@ -25,7 +25,7 @@ public class TileGroup {
         short[][] grid = new short[Tile.Color.values().length - 1][Tile.TILES_PER_COLOR];
         int[] scores = new int[tiles.size() + 1];
         scores[0] = 0;
-        for(int i = 1; i <= tiles.size(); i++){
+        for(int i = 1; !tiles.isEmpty(); i++){
             //scoring function of Dynamic Programming.
             scores[i] = scores[i - 1];
             Tile tile = tiles.remove(0);
