@@ -1,57 +1,87 @@
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
-
-import static java.lang.Math.max;
 
 public class TileGroup {
-    private ArrayList<Tile> tiles;
+    private final ArrayList<Tile> tiles;
+    public static final int PAIR_SIZE = 2;
     public static final int GROUP_MIN_COUNT_CONDITION = 3;
     public static final int GROUP_SAME_COLOR_MAX_COUNT_CONDITION = 4;
-    TileGroup(ArrayList<Tile> tiles){
-        this.tiles = tiles;
-    }
-    public int getScore(ArrayList<Tile> tiles){
-        int[] scores = new int[tiles.size()];
-        scores[0] = 0;
-        for(int i = 1; i < tiles.size(); i++){
-            //scoring function of Dynamic Programming.
-            //case 1: the tile does not have a duplicate.
-            //case1.1: New tile may be the leftest one in consecutive tiles. E.g. [7],8,9,10
 
-
-            //case1.2: New tile may be the rightest one in consecutive tiles. E.g. 7,8,9,[10]
-
-            //case1.3: New tile may be a middle tile in consecutive tiles. E.g. 1,2,[3],4,5
-
-
-
-            //case 2: the tile has a duplicate.
-            //case2.4: New tile may be a separator middle tile in consecutive tiles. E.g. 1,2,[3] ; 3,4,5
-
-            //case2.5: New tile may be a part of duplicate consecutive tiles. E.g. 1,2,[3] ; 1,2,3
-
-            //case1.6 & 2.6: New tile may be another tile in color group E.g. Example1: Red 4, Black 4, [Blue 4] OR Example2: Red 4, Black 4, Blue 4, [Yellow 4]
+    private final Game game;
+    public static short[][] deepCopy(short[][] original) {
+        if (original == null) {
+            return null;
         }
-        int pair_score = 0; //will be updated to be the score of pairs.
-        return max(scores[scores.length - 1], pair_score);
-//        if (tiles.size() >= GROUP_MIN_COUNT_CONDITION){
-//            if(tiles.size() <= GROUP_SAME_COLOR_MAX_COUNT_CONDITION){
-//                boolean sameColorExists = false;
-//                for(int i = 0; i < tiles.size(); i++){
-//                    for(int j = i + 1; j < tiles.size(); j++){
-//                        if(tiles.get(i).getColor() == tiles.get(j).getColor())
-//                            sameColorExists = true;
-//                    }
-//                }
-//                if(sameColorExists)
-//                    return true;
-//            }
-//            System.out.println("hi");
-//        }
-//        return false;
+        final short[][] result = new short[original.length][];
+        for (int i = 0; i < original.length; i++) {
+
+            result[i] = Arrays.copyOf(original[i], original[i].length);
+        }
+        return result;
     }
-    public Tile[] findTile(ArrayList<Tile> tiles, Tile.COLOR color, int value){
+
+    TileGroup(Game game, ArrayList<Tile> tiles){
+        this.tiles = tiles;
+        this.game = game;
+    }
+    public int getScore(){
+        ArrayList<Tile> tiles_copy = new ArrayList<>(tiles);
+        short[][] grid = new short[Tile.Color.values().length - 1][Tile.TILES_PER_COLOR];
+        int[] scores = new int[tiles_copy.size() + 1];
+         scores[0] = 0;
+        for(int i = 1; !tiles_copy.isEmpty(); i++){
+            //scoring function of Dynamic Programming.
+            scores[i] = scores[i - 1];
+            Tile tile = tiles_copy.remove(0);
+
+
+
+            short[][] grid_old = TileGroup.deepCopy(grid);
+            int colorI;
+            int valI;
+            if(tile.getColor() == Tile.Color.FAKE_JOKER){
+                colorI = Tile.getColorIndex(game.getJokerColor());
+                valI = game.getJokerValue() - 1;
+            }else{
+                colorI = Tile.getColorIndex(tile.getColor());
+                valI = tile.getValue() - 1;
+            }
+            grid[colorI][valI]++;
+            short[][] grid_new = TileGroup.deepCopy(grid);
+
+            if(formsASet(grid_new, colorI, valI)){
+                int total_old = 0;
+                int total_new = 0;
+                while(formsASet(grid_old, colorI, valI)){
+                    short[] bestSet = bestSet(grid_old, colorI, valI);
+                    short[][] temp_grid = gridize(bestSet, colorI, valI);
+                    int count = 0;
+                    for(int j = 0; j <  grid_old.length; j++) {
+                        for(int k = 0; k < grid_old[0].length; k++){
+                            grid_old[j][k] -= temp_grid[j][k];
+                            count += temp_grid[j][k];
+                        }
+                    }
+                    total_old += count;
+                }
+                while(formsASet(grid_new, colorI, valI)){
+                    short[] bestSet = bestSet(grid_new, colorI, valI);
+                    short[][] temp_grid = gridize(bestSet, colorI, valI);
+                    int count = 0;
+                    for(int j = 0; j <  grid_new.length; j++) {
+                        for(int k = 0; k < grid_new[0].length; k++){
+                            grid_new[j][k] -= temp_grid[j][k];
+                            count += temp_grid[j][k];
+                        }
+                    }
+                    total_new += count;
+                }
+                scores[i] += total_new - total_old;
+            }
+        }
+        return scores[scores.length  - 1];
+    }
+    public Tile[] findTile(ArrayList<Tile> tiles, Tile.Color color, int value){
         Tile[] results = new Tile[2];
         for (Tile tile : tiles) {
             if (tile.getColor() == color && tile.getValue() == value) {
@@ -63,32 +93,129 @@ public class TileGroup {
         }
         return results;
     }
-    public void sort(){
 
-    }
-    public int getSpecificSetScore(ArrayList<Tile> tiles){
-        //NOTE: exceptional case will be added : if there is a joker in tiles.
-        //too few tiles.
-        if (tiles.size() < 2)
-            return 0;
-        //pair
-        if (tiles.size() == 2)
-            return tiles.get(0).equals(tiles.get(1)) ? 2 : 0;
-        //same number, different color group.
-        //Tile tile = tiles.get(0);
-        int[] colorsFound = new int[Tile.COLOR.values().length];
-        int duplicateColorFound = 0;
-        for(Tile tile: tiles){
-            colorsFound[Arrays.asList(Tile.COLOR.values()).indexOf(tile.getColor())] += 1;
-            if (colorsFound[Arrays.asList(Tile.COLOR.values()).indexOf(tile.getColor())] >= 1)
-                duplicateColorFound += 1;
+    public boolean formsASet(short[][] grid, int colorIndex, int valueIndex){
+        if(grid[colorIndex][valueIndex] < 1)
+            return false;
+
+        boolean one_left = valueIndex > 0
+                && grid[colorIndex][valueIndex - 1] >= 1;
+        boolean two_left = valueIndex > 1
+                && grid[colorIndex][valueIndex - 2] >= 1;
+        boolean one_right = valueIndex < Tile.TILES_PER_COLOR - 1
+                && grid[colorIndex][valueIndex + 1] >= 1;
+        boolean two_right = valueIndex < Tile.TILES_PER_COLOR - 2
+                && grid[colorIndex][valueIndex + 2] >= 1;
+        boolean consequtiveSet = (two_left && one_left)
+                || (one_right && two_right)
+                || (one_left && one_right);
+        if(consequtiveSet)
+            return true;
+        int count  = 0;
+        for (short[] rows : grid) {
+            if (rows[valueIndex] >= 1)
+                count++;
         }
+        return count >= GROUP_MIN_COUNT_CONDITION;
+    }
+
+    /**
+     * This method finds the best set a particular tile may make.
+     * @param grid all the tiles in the board of the player.
+     * @param colorIndex index of the Tile's color in grid.
+     * @param valueIndex index of Tile's value in grid.
+     * @return a summary array denoting the best set.
+     * For consec. sets, return length is 2, [0]->lowestIndex, [1]=highestIndex; For color sets, it's length of 4, each index denoting involved colors with 0/1. For bidirectional(both conseq. and color) sets, it's length is 6; which is [0,1]->horizontal, [2..5]->vertical
+     */
+    public short[] bestSet(short[][] grid, int colorIndex, int valueIndex){
+        if(grid[colorIndex][valueIndex] == 0)
+            return null;
+        int low = valueIndex;
+        int high = valueIndex;
+        while(low >= 1 && grid[colorIndex][low - 1] >= 1)
+            low--;
+        while(high < Tile.TILES_PER_COLOR - 1 && grid[colorIndex][high + 1] >= 1)
+            high++;
+        int consequtiveTotal = high - low + 1;
+        if (high == Tile.TILES_PER_COLOR - 1 && grid[colorIndex][0] >= 1){
+            consequtiveTotal++;
+            high = 0;
+        }
+        int specialCaseLow = Tile.TILES_PER_COLOR - 1;
+        int specialCaseHigh = 0;
+        while(specialCaseLow >= 1 && grid[colorIndex][specialCaseLow - 1] >= 1)
+            specialCaseLow--;
+        int specialCaseTotal = Tile.TILES_PER_COLOR - specialCaseLow + 1;
+        short[] colorGrid = new short[Tile.Color.values().length - 1];
         int colorCount = 0;
-        for(int color : colorsFound)
-            colorCount += color >= 1 ? 1 : 0;
+        for(int i = 0; i < Tile.Color.values().length - 1; i++) {
+            if (grid[i][valueIndex] == 1) {
+                colorGrid[i] = 1;
+                colorCount++;
+            }
+        }
+        if(colorCount > GROUP_MIN_COUNT_CONDITION){
+            if (consequtiveTotal > specialCaseTotal && consequtiveTotal >= GROUP_MIN_COUNT_CONDITION){
+                short[] res = new short[2 + colorGrid.length];
+                res[0] = (short)low;
+                res[1] = (short)high;
+                System.arraycopy(colorGrid, 0, res, 2, colorGrid.length);
+                return res;
+            }else if(specialCaseTotal >  consequtiveTotal && specialCaseTotal >= GROUP_MIN_COUNT_CONDITION){
+                short[] res = new short[2 + colorGrid.length];
+                res[0] = (short)specialCaseLow;
+                res[1] = (short)specialCaseHigh;
+                System.arraycopy(colorGrid, 0, res, 2, colorGrid.length);
+                return res;
+            }
+        }
+        if (consequtiveTotal > specialCaseTotal){
+            if (consequtiveTotal > colorCount){
+                return new short[]{(short) low, (short) high};
+            }
+            return new short[]{(short) specialCaseLow, (short) specialCaseLow};
+        }
+        //There will be another case here. For example [Red (3,4,5)] + [(Yellow, Black,Blue)5] it will be implemented later!
+        return colorGrid;
+    }
 
-        return 0;
+    /**
+     * This is just an helper method. This method will be merged with bestSet() method, and discarded to be deprecated in the following versions.
+     * @param info information about the grid.
+     * @return the grid denoting all the tile locations.
+     */
+    public short[][] gridize(short[] info, int colorIndex, int valueIndex){
+        short[][] res = new short[Tile.Color.values().length - 1][Tile.TILES_PER_COLOR];
 
-
+        if(info == null){
+            return res;
+        }
+        else if(info.length == 2){ //only low and high.
+            short low = info[0];
+            short high = info[1];
+            if(low < high){
+                for(int i = low; i <= high; i++){
+                    res[colorIndex][i] = 1;
+                }
+            }else{
+                res[colorIndex][0] = 1;
+                for(int i = 0; i < Tile.TILES_PER_COLOR; i++) {
+                    res[colorIndex][i] = 1;
+                }
+            }
+        }else if(info.length == Tile.Color.values().length - 1){
+            for(int i = 0; i < info.length; i++){
+                res[i][valueIndex] = info[i];
+            }
+        }else if(info.length == Tile.Color.values().length - 1 + 2){
+            short[][] res_1 = gridize(Arrays.copyOfRange(info, 0, 2), colorIndex, valueIndex);
+            short[][] res_2 = gridize(Arrays.copyOfRange(info, 2, info.length), colorIndex, valueIndex);
+            for(int i = 0; i < res.length; i++) {
+                for(int j = 0; j < res[0].length; j++){
+                    res[i][j] = (short)(res_1[i][j] + res_2[i][j]);
+                }
+            }
+        }
+        return res;
     }
 }

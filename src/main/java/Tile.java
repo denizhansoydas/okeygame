@@ -8,9 +8,9 @@ public class Tile{
     //static properties, methods and enumerations
     public static final int TILES_PER_COLOR = 13;
     public static int maxNumber(){
-        return TILES_PER_COLOR * (COLOR.values().length - 1);
+        return TILES_PER_COLOR * (Color.values().length - 1);
     }
-    public enum COLOR{
+    public enum Color {
         YELLOW,
         BLUE,
         BLACK,
@@ -27,8 +27,8 @@ public class Tile{
         else
             throw new WrongColorException(no);
     }
-    public Tile(int tileValue, COLOR color) throws WrongColorException{
-        int no = TILES_PER_COLOR * Arrays.asList(COLOR.values()).indexOf(color) + tileValue;
+    public Tile(Color color, int tileValue) throws WrongColorException{
+        int no = TILES_PER_COLOR * Arrays.asList(Color.values()).indexOf(color) + tileValue;
         if (no < 0 || no > maxNumber())
             throw new WrongColorException(no);
         this.no = no;
@@ -41,16 +41,16 @@ public class Tile{
     public void setNo(int no) {
         this.no = no;
     }
-    public COLOR getColor() throws WrongColorException{
+    public Color getColor() throws WrongColorException{
         if (no == maxNumber())
-            return COLOR.FAKE_JOKER;
+            return Color.FAKE_JOKER;
         int colorNo = no / TILES_PER_COLOR;
 
         return switch (colorNo) {
-            case 0 -> COLOR.YELLOW;
-            case 1 -> COLOR.BLUE;
-            case 2 -> COLOR.BLACK;
-            case 3 -> COLOR.RED;
+            case 0 -> Color.YELLOW;
+            case 1 -> Color.BLUE;
+            case 2 -> Color.BLACK;
+            case 3 -> Color.RED;
             default -> throw new WrongColorException(no);
         };
     }
@@ -80,6 +80,9 @@ public class Tile{
         return getValue() == tile.getValue();
     }
     public boolean isFakeJoker(){
-        return getColor() == COLOR.FAKE_JOKER;
+        return getColor() == Color.FAKE_JOKER;
+    }
+    public static int getColorIndex(Color color){
+        return Arrays.asList(Color.values()).indexOf(color);
     }
 }

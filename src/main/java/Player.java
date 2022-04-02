@@ -1,18 +1,21 @@
+import java.util.ArrayList;
 import java.util.LinkedList;
 
 public class Player {
-    private LinkedList<Tile> board;
+    private ArrayList<Tile> board;
+    private String name;
     //private Tile left; //for future purposes
     //private Tile right; //for future purposes
-    Player(){
-        board = new LinkedList<>();
+    Player(String name){
+        board = new ArrayList<>();
+        this.name = name;
     }
 
-    public LinkedList<Tile> getBoard() {
+    public ArrayList<Tile> getBoard() {
         return board;
     }
 
-    public void setBoard(LinkedList<Tile> board) {
+    public void setBoard(ArrayList<Tile> board) {
         this.board = board;
     }
     public void takeTile(Tile tile){
@@ -23,5 +26,13 @@ public class Player {
     }
     public void discardTile(int tileIndex){
         board.remove(tileIndex);
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 }
