@@ -29,19 +29,40 @@ public class TileGroup {
             //scoring function of Dynamic Programming.
             scores[i] = scores[i - 1];
             Tile tile = tiles.remove(0);
-            //case 0: there is not enough tile to form a group.
-            if(!formsASet(grid,Tile.getColorIndex(tile.getColor()), tile.getValue() - 1)){
-                return scores[i - 1];
-            }
-            short[][] grid_new = TileGroup.deepCopy(grid);
-            short[][] grid_old = TileGroup.deepCopy(grid);
 
-//            if(i < GROUP_MIN_COUNT_CONDITION){
-//                short colorIndex = (short)Tile.getColorIndex(tile.getColor());
-//                short valueIndex = (short)tile.getValue();
-//                grid[colorIndex][valueIndex] += 1;
-//                duplicateExists = grid[colorIndex][valueIndex] >= 2;
-//            }
+
+            grid[Tile.getColorIndex(tile.getColor())][tile.getValue()]++;
+            short[][] grid_old = TileGroup.deepCopy(grid);
+            short[][] grid_new = TileGroup.deepCopy(grid);
+            grid_new[Tile.getColorIndex(tile.getColor())][tile.getValue()]++;
+
+            if(formsASet(grid_new,Tile.getColorIndex(tile.getColor()), tile.getValue() - 1)){
+                int total_old = 0;
+                int total_new = 0;
+                while(formsASet(grid_old, Tile.getColorIndex(tile.getColor()), tile.getValue())){
+                    short[][] temp_grid = gridize(bestSet(grid_old, Tile.getColorIndex(tile.getColor()), tile.getValue()), Tile.getColorIndex(tile.getColor()), tile.getValue());
+                    int count = 0;
+                    for(int j = 0; j <  grid_old.length; j++) {
+                        for(int k = 0; k < grid_old[0].length; k++){
+                            grid_old[j][k] -= temp_grid[j][k];
+                            count += temp_grid[j][k];
+                        }
+                    }
+                    total_old += count;
+                }
+                while(formsASet(grid_new, Tile.getColorIndex(tile.getColor()), tile.getValue())){
+                    short[][] temp_grid = gridize(bestSet(grid_new, Tile.getColorIndex(tile.getColor()), tile.getValue()), Tile.getColorIndex(tile.getColor()), tile.getValue());
+                    int count = 0;
+                    for(int j = 0; j <  grid_new.length; j++) {
+                        for(int k = 0; k < grid_new[0].length; k++){
+                            grid_new[j][k] -= temp_grid[j][k];
+                            count += temp_grid[j][k];
+                        }
+                    }
+                    total_new += count;
+                }
+                scores[i] += total_old - total_new;
+            }
         }
         return 0; //will be re-implemented
     }
