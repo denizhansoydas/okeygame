@@ -2,10 +2,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class TileGroup {
-    private ArrayList<Tile> tiles;
+    private final ArrayList<Tile> tiles;
     public static final int PAIR_SIZE = 2;
     public static final int GROUP_MIN_COUNT_CONDITION = 3;
     public static final int GROUP_SAME_COLOR_MAX_COUNT_CONDITION = 4;
+
+    private final Game game;
     public static short[][] deepCopy(short[][] original) {
         if (original == null) {
             return null;
@@ -18,29 +20,41 @@ public class TileGroup {
         return result;
     }
 
-    TileGroup(ArrayList<Tile> tiles){
+    TileGroup(Game game, ArrayList<Tile> tiles){
         this.tiles = tiles;
+        this.game = game;
     }
-    public int getScore(ArrayList<Tile> tiles){
+    public int getScore(){
+        ArrayList<Tile> tiles_copy = new ArrayList<>(tiles);
         short[][] grid = new short[Tile.Color.values().length - 1][Tile.TILES_PER_COLOR];
-        int[] scores = new int[tiles.size() + 1];
-        scores[0] = 0;
-        for(int i = 1; !tiles.isEmpty(); i++){
+        int[] scores = new int[tiles_copy.size() + 1];
+         scores[0] = 0;
+        for(int i = 1; !tiles_copy.isEmpty(); i++){
             //scoring function of Dynamic Programming.
             scores[i] = scores[i - 1];
-            Tile tile = tiles.remove(0);
+            Tile tile = tiles_copy.remove(0);
 
 
-            grid[Tile.getColorIndex(tile.getColor())][tile.getValue()]++;
+
             short[][] grid_old = TileGroup.deepCopy(grid);
+            int colorI;
+            int valI;
+            if(tile.getColor() == Tile.Color.FAKE_JOKER){
+                colorI = Tile.getColorIndex(game.getJokerColor());
+                valI = game.getJokerValue() - 1;
+            }else{
+                colorI = Tile.getColorIndex(tile.getColor());
+                valI = tile.getValue() - 1;
+            }
+            grid[colorI][valI]++;
             short[][] grid_new = TileGroup.deepCopy(grid);
-            grid_new[Tile.getColorIndex(tile.getColor())][tile.getValue()]++;
 
-            if(formsASet(grid_new,Tile.getColorIndex(tile.getColor()), tile.getValue() - 1)){
+            if(formsASet(grid_new, colorI, valI)){
                 int total_old = 0;
                 int total_new = 0;
-                while(formsASet(grid_old, Tile.getColorIndex(tile.getColor()), tile.getValue())){
-                    short[][] temp_grid = gridize(bestSet(grid_old, Tile.getColorIndex(tile.getColor()), tile.getValue()), Tile.getColorIndex(tile.getColor()), tile.getValue());
+                while(formsASet(grid_old, colorI, valI)){
+                    short[] bestSet = bestSet(grid_old, colorI, valI);
+                    short[][] temp_grid = gridize(bestSet, colorI, valI);
                     int count = 0;
                     for(int j = 0; j <  grid_old.length; j++) {
                         for(int k = 0; k < grid_old[0].length; k++){
@@ -50,8 +64,9 @@ public class TileGroup {
                     }
                     total_old += count;
                 }
-                while(formsASet(grid_new, Tile.getColorIndex(tile.getColor()), tile.getValue())){
-                    short[][] temp_grid = gridize(bestSet(grid_new, Tile.getColorIndex(tile.getColor()), tile.getValue()), Tile.getColorIndex(tile.getColor()), tile.getValue());
+                while(formsASet(grid_new, colorI, valI)){
+                    short[] bestSet = bestSet(grid_new, colorI, valI);
+                    short[][] temp_grid = gridize(bestSet, colorI, valI);
                     int count = 0;
                     for(int j = 0; j <  grid_new.length; j++) {
                         for(int k = 0; k < grid_new[0].length; k++){
@@ -61,10 +76,10 @@ public class TileGroup {
                     }
                     total_new += count;
                 }
-                scores[i] += total_old - total_new;
+                scores[i] += total_new - total_old;
             }
         }
-        return 0; //will be re-implemented
+        return scores[scores.length  - 1];
     }
     public Tile[] findTile(ArrayList<Tile> tiles, Tile.Color color, int value){
         Tile[] results = new Tile[2];
@@ -79,7 +94,7 @@ public class TileGroup {
         return results;
     }
 
-    public boolean formsASet(short[][] grid, int colorIndex, int valueIndex){ //will be enhanced to handle sets of {...,12,13,1}
+    public boolean formsASet(short[][] grid, int colorIndex, int valueIndex){
         if(grid[colorIndex][valueIndex] < 1)
             return false;
 
@@ -87,9 +102,9 @@ public class TileGroup {
                 && grid[colorIndex][valueIndex - 1] >= 1;
         boolean two_left = valueIndex > 1
                 && grid[colorIndex][valueIndex - 2] >= 1;
-        boolean one_right = valueIndex < Tile.TILES_PER_COLOR
+        boolean one_right = valueIndex < Tile.TILES_PER_COLOR - 1
                 && grid[colorIndex][valueIndex + 1] >= 1;
-        boolean two_right = valueIndex < Tile.TILES_PER_COLOR - 1
+        boolean two_right = valueIndex < Tile.TILES_PER_COLOR - 2
                 && grid[colorIndex][valueIndex + 2] >= 1;
         boolean consequtiveSet = (two_left && one_left)
                 || (one_right && two_right)
@@ -172,7 +187,10 @@ public class TileGroup {
     public short[][] gridize(short[] info, int colorIndex, int valueIndex){
         short[][] res = new short[Tile.Color.values().length - 1][Tile.TILES_PER_COLOR];
 
-        if(info.length == 2){ //only low and high.
+        if(info == null){
+            return res;
+        }
+        else if(info.length == 2){ //only low and high.
             short low = info[0];
             short high = info[1];
             if(low < high){
@@ -187,7 +205,7 @@ public class TileGroup {
             }
         }else if(info.length == Tile.Color.values().length - 1){
             for(int i = 0; i < info.length; i++){
-                res[i][valueIndex] = 1;
+                res[i][valueIndex] = info[i];
             }
         }else if(info.length == Tile.Color.values().length - 1 + 2){
             short[][] res_1 = gridize(Arrays.copyOfRange(info, 0, 2), colorIndex, valueIndex);

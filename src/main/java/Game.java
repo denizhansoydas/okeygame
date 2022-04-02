@@ -25,16 +25,28 @@ public class Game {
             tiles[START_TILE_COUNT / 2 + i] = new Tile(i);
         }
 
-        for(int i = 0; i < PLAYER_COUNT; i++)
-            players[i] = new Player();
+//        for(int i = 0; i < PLAYER_COUNT; i++)
+//            players[i] = new Player();
+        players[0] = new Player("AHMET");
+        players[1] = new Player("MEHMET");
+        players[2] = new Player("VELI");
+        players[3] = new Player("FATMA");
 
         shuffle(tiles);
         chooseJoker();
         distribute();
-
+        Player possiblyWinningPlayer = players[0];
+        int score = 0;
         for (Player player : players) {
-            System.out.println("A player has" + player.getBoard().size() + " tiles:" + player.getBoard());
+            TileGroup playersTiles = new TileGroup(this, player.getBoard());
+            System.out.println("Player " + player.getName() +" has " + player.getBoard().size() + " tiles: " + player.getBoard());
+            System.out.println("Player has score: " + playersTiles.getScore());
+            if(playersTiles.getScore() > score){
+                score = playersTiles.getScore();
+                possiblyWinningPlayer = player;
+            }
         }
+        System.out.println("Player " + possiblyWinningPlayer.getName() + " is closest to win with score: " + score);
     }
 
     /**
