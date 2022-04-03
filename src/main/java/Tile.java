@@ -1,14 +1,28 @@
 import java.util.Arrays;
 
 /**
+ * This class is for a single Tile item in the game.
  * @author Denizhan Soydas
- * @version 1.0-SNAPSHOT
+ * @version 1.1
  */
 public class Tile{
     //static properties, methods and enumerations
     public static final int TILES_PER_COLOR = 13;
-    public static int maxNumber(){
+
+    /**
+     * This method is to determine the max number a single tile can have.
+     * @return the max number
+     */
+    private static int maxNumber(){
         return TILES_PER_COLOR * (Color.values().length - 1);
+    }
+    /**
+     * gives the index of the color in the grids.
+     * @param color is the given color
+     * @return the index of color in the grids.
+     */
+    public static int getColorIndex(Color color){
+        return Arrays.asList(Color.values()).indexOf(color);
     }
     public enum Color {
         YELLOW,
@@ -22,25 +36,65 @@ public class Tile{
 
     //constructors
     public Tile(int no) throws WrongColorException{
-        if (no >= 0 && no <= 52)
+        if (no >= 0 && no <= maxNumber())
             this.no = no;
         else
             throw new WrongColorException(no);
     }
     public Tile(Color color, int tileValue) throws WrongColorException{
-        int no = TILES_PER_COLOR * Arrays.asList(Color.values()).indexOf(color) + tileValue;
-        if (no < 0 || no > maxNumber())
-            throw new WrongColorException(no);
-        this.no = no;
+        this(TILES_PER_COLOR * Arrays.asList(Color.values()).indexOf(color) + tileValue);
     }
 
     //methods
+
+    /**
+     * Determines whether the tiles have the same color
+     * @param tile the second tile.(first is "this")
+     * @return truth value denoting they have the same color or not.
+     */
+    public boolean sameColor(Tile tile){
+        return getColor() == tile.getColor();
+    }
+
+    /**
+     * Determines whether the tiles are the same.(Deep comparison, not shallow!)
+     * @param tile the second tile (first is "this")
+     * @return truth value denoting they are the same.
+     */
+    public boolean equals(Tile tile){
+        return getNo() == tile.getNo();
+    }
+
+    /**
+     * Determines the tiles have the same value.
+     * @param tile the second tile (first is "this")
+     * @return truth value denoting they have the same value.
+     */
+    public boolean sameValue(Tile tile){
+        return getValue() == tile.getValue();
+    }
+    /**
+     * Determines whether the tile is a fake joker or not
+     * @return truth value denoting whether it is a fake joker or not.
+     */
+    public boolean isFakeJoker(){
+        return getColor() == Color.FAKE_JOKER;
+    }
+
+
+
     public int getNo() {
         return no;
     }
     public void setNo(int no) {
         this.no = no;
     }
+
+    /**
+     * A simple method to get the Color of a tile.
+     * @return Color of the tile.
+     * @throws WrongColorException if the given tile has a wrong(that should not exist) color.
+     */
     public Color getColor() throws WrongColorException{
         if (no == maxNumber())
             return Color.FAKE_JOKER;
@@ -54,10 +108,19 @@ public class Tile{
             default -> throw new WrongColorException(no);
         };
     }
-    //will be edited so that it will return Joker's number when it is a fake joker.
+
+    /**
+     * A simple method to get the value of a tile.
+     * @return value of the tile.
+     */
     public int getValue(){
-        return no != maxNumber() ? no % TILES_PER_COLOR + 1 : -1;
+        return no != maxNumber() ? no % TILES_PER_COLOR + 1 : -1; //Fake joker does not have a value. Therefore, its value is denoted with -1.
     }
+
+    /**
+     * toString() method to convert a tile to a better format.
+     * @return "COLOR-VALUE"
+     */
     public String toString(){
         try {
             //Longer naming
@@ -69,20 +132,5 @@ public class Tile{
         } catch (WrongColorException e) {
             return "No: " + no + " Color: " + "UNKNOWN" + " Value: " + getValue();
         }
-    }
-    public boolean sameColor(Tile tile){
-        return getColor() == tile.getColor();
-    }
-    public boolean equals(Tile tile){
-        return getNo() == tile.getNo();
-    }
-    public boolean sameValue(Tile tile){
-        return getValue() == tile.getValue();
-    }
-    public boolean isFakeJoker(){
-        return getColor() == Color.FAKE_JOKER;
-    }
-    public static int getColorIndex(Color color){
-        return Arrays.asList(Color.values()).indexOf(color);
     }
 }

@@ -1,14 +1,23 @@
 import java.util.ArrayList;
 import java.util.Arrays;
 
+/**
+ * This class is for groups of tiles that is on the board of a user.
+ * @author Denizhan Soydas
+ * @version 1.1
+ */
 public class TileGroup {
-    private final ArrayList<Tile> tiles;
+    //static properties and methods
     public static final int PAIR_SIZE = 2;
     public static final int GROUP_MIN_COUNT_CONDITION = 3;
     public static final int GROUP_SAME_COLOR_MAX_COUNT_CONDITION = 4;
 
-    private final Game game;
-    public static short[][] deepCopy(short[][] original) {
+    /**
+     * Helper function that copies a grid deeply.(i.e. Not shallow copy)
+     * @param original the grid to be copied.
+     * @return new copy grid.
+     */
+    private static short[][] deepCopy(short[][] original) {
         if (original == null) {
             return null;
         }
@@ -20,10 +29,20 @@ public class TileGroup {
         return result;
     }
 
+    //properties
+    private final ArrayList<Tile> tiles;
+    private final Game game;
+
+    //constructors
     TileGroup(Game game, ArrayList<Tile> tiles){
         this.tiles = tiles;
         this.game = game;
     }
+    //methods
+    /**
+     * This method returns the score of a group of tiles(i.e. number of tiles in all sets).
+     * @return the score in the best combination.
+     */
     public int getScore(){
         ArrayList<Tile> tiles_copy = new ArrayList<>(tiles);
         short[][] grid = new short[Tile.Color.values().length - 1][Tile.TILES_PER_COLOR];
@@ -39,7 +58,7 @@ public class TileGroup {
             short[][] grid_old = TileGroup.deepCopy(grid);
             int colorI;
             int valI;
-            if(tile.getColor() == Tile.Color.FAKE_JOKER){
+            if(tile.isFakeJoker()){
                 colorI = Tile.getColorIndex(game.getJokerColor());
                 valI = game.getJokerValue() - 1;
             }else{
@@ -82,7 +101,13 @@ public class TileGroup {
         }
         return scores[scores.length  - 1];
     }
-    public Tile[] findTile(ArrayList<Tile> tiles, Tile.Color color, int value){
+    /**
+     * this method finds a tile in the board/group. Not used right now but may be helpful in the future versions.
+     * @param color color of the tile to be searched.
+     * @param value value of the tile to be searched.
+     * @return the tile instances that match.(There may be two because there are duplicates!)
+     */
+    public Tile[] findTile(Tile.Color color, int value){
         Tile[] results = new Tile[2];
         for (Tile tile : tiles) {
             if (tile.getColor() == color && tile.getValue() == value) {
@@ -94,7 +119,13 @@ public class TileGroup {
         }
         return results;
     }
-
+    /**
+     * This methods shows whether a given tile may form up a set with the neighbour tiles(consecutive or same color)
+     * @param grid situation of the board, a color*value grid that denotes every tile.
+     * @param colorIndex color index of the tile.
+     * @param valueIndex value index of the tile.
+     * @return whether the given tile may form up a set or not.
+     */
     public boolean formsASet(short[][] grid, int colorIndex, int valueIndex){
         if(grid[colorIndex][valueIndex] < 1)
             return false;
@@ -119,14 +150,15 @@ public class TileGroup {
         }
         return count >= GROUP_MIN_COUNT_CONDITION;
     }
-
     /**
      * This method finds the best set a particular tile may make.
      * @param grid all the tiles in the board of the player.
      * @param colorIndex index of the Tile's color in grid.
      * @param valueIndex index of Tile's value in grid.
      * @return a summary array denoting the best set.
-     * For consec. sets, return length is 2, [0]->lowestIndex, [1]=highestIndex; For color sets, it's length of 4, each index denoting involved colors with 0/1. For bidirectional(both conseq. and color) sets, it's length is 6; which is [0,1]->horizontal, [2..5]->vertical
+     * For consec. sets, return length is 2, [0]->lowestIndex, [1]=highestIndex;
+     * For color sets, it's length of 4, each index denoting involved colors with 0/1.
+     * For bidirectional(both conseq. and color) sets, it's length is 6; which is [0,1]->horizontal, [2..5]->vertical
      */
     public short[] bestSet(short[][] grid, int colorIndex, int valueIndex){
         if(grid[colorIndex][valueIndex] == 0) //return null if there is no tile in the given index.
@@ -219,7 +251,6 @@ public class TileGroup {
         */
 
     }
-
     /**
      * This is just an helper method. This method will be merged with bestSet() method, and discarded to be deprecated in the following versions.
      * @param info information about the grid.
