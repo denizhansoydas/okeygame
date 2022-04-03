@@ -1,6 +1,11 @@
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
+/**
+ * This class is for the whole okey game.
+ * @author Denizhan Soydas
+ * @version 1.1
+ */
 public class Game {
     //static properties and methods
     public static final int START_TILE_COUNT = 106;
@@ -27,10 +32,10 @@ public class Game {
 
 //        for(int i = 0; i < PLAYER_COUNT; i++)
 //            players[i] = new Player();
-        players[0] = new Player("AHMET");
-        players[1] = new Player("MEHMET");
-        players[2] = new Player("VELI");
-        players[3] = new Player("FATMA");
+        players[0] = new Player(this,"AHMET");
+        players[1] = new Player(this,"MEHMET");
+        players[2] = new Player(this,"VELI");
+        players[3] = new Player(this,"FATMA");
 
         shuffle(tiles);
         chooseJoker();
@@ -49,6 +54,7 @@ public class Game {
         System.out.println("Player " + possiblyWinningPlayer.getName() + " is closest to win with score: " + score);
     }
 
+    //methods
     /**
      * Method to shuffle the tiles. Aimed to be used only in constructor.
      * @param tiles is the array of not shuffled tiles.
@@ -60,28 +66,40 @@ public class Game {
         Collections.addAll(shuffledTiles, tiles);
         System.out.println("Shuffled.");
     }
-
-    public ArrayList<Tile> getShuffledTiles() {
-        return shuffledTiles;
-    }
-
-    public void setShuffledTiles(ArrayList<Tile> shuffledTiles) {
-        this.shuffledTiles = shuffledTiles;
-    }
-
-    public Player[] getPlayers() {
-        return players;
-    }
-
-    public void setPlayers(Player[] players) {
-        this.players = players;
-    }
+    /**
+     * This method determines the joker by facing up a tile.
+     */
     public void chooseJoker(){ // does not roll a die like in real okey game.
         int i = 0;
         //noinspection StatementWithEmptyBody (Supressed.)
         for(; shuffledTiles.get(i).isFakeJoker(); i++); //find a not fake joker index.
         faceUpTile = shuffledTiles.remove(i);
         System.out.println("FaceUpTile is now determined as: " + faceUpTile + " and Joker is now:" + new Tile(getJokerNo()));
+    }
+    /**
+     * This method distributes the tiles to players.
+     */
+    public void distribute(){
+        for(int i = 0; i < TILES_PER_PLAYER; i++){
+            for(Player player: players){
+                player.takeTile(shuffledTiles.remove(0));
+            }
+        }
+        int randomNumber = ThreadLocalRandom.current().nextInt(0, players.length); //See: Java 1.7+ Random Number Generation.
+        players[randomNumber].takeTile(shuffledTiles.remove(0));
+        System.out.println("Distributed.");
+    }
+    public ArrayList<Tile> getShuffledTiles() {
+        return shuffledTiles;
+    }
+    public void setShuffledTiles(ArrayList<Tile> shuffledTiles) {
+        this.shuffledTiles = shuffledTiles;
+    }
+    public Player[] getPlayers() {
+        return players;
+    }
+    public void setPlayers(Player[] players) {
+        this.players = players;
     }
     public Tile getFaceUpTile() {
         return faceUpTile;
@@ -98,16 +116,4 @@ public class Game {
     public Tile.Color getJokerColor(){
         return faceUpTile.getColor();
     }
-    public void distribute(){
-        for(int i = 0; i < TILES_PER_PLAYER; i++){
-            for(Player player: players){
-                player.takeTile(shuffledTiles.remove(0));
-            }
-        }
-        int randomNumber = ThreadLocalRandom.current().nextInt(0, players.length); //See: Java 1.7+ Random Number Generation.
-        players[randomNumber].takeTile(shuffledTiles.remove(0));
-        System.out.println("Distributed.");
-    }
-
-
 }
