@@ -10,6 +10,7 @@ public class Game {
     //static properties and methods
     public static final int START_TILE_COUNT = 106;
     public static final int TILES_PER_PLAYER = 14;
+    public static final int WINNING_SCORE = 14;
     public static final int PLAYER_COUNT = 4;
 
     //properties
@@ -51,7 +52,7 @@ public class Game {
                 possiblyWinningPlayer = player;
             }
         }
-        System.out.println("Player " + possiblyWinningPlayer.getName() + " is closest to win with score: " + score);
+        System.out.println("Player " + possiblyWinningPlayer.getName() + " is closest to win with score: " + score +" meaning that " + (WINNING_SCORE - score) + " tiles left to win.");
     }
 
     //methods
