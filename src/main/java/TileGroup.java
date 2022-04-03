@@ -50,20 +50,9 @@ public class TileGroup {
             short[][] grid_new = TileGroup.deepCopy(grid);
 
             if(formsASet(grid_new, colorI, valI)){
-                int total_old = 0;
                 int total_new = 0;
-                while(formsASet(grid_old, colorI, valI)){
-                    short[] bestSet = bestSet(grid_old, colorI, valI);
-                    short[][] temp_grid = gridize(bestSet, colorI, valI);
-                    int count = 0;
-                    for(int j = 0; j <  grid_old.length; j++) {
-                        for(int k = 0; k < grid_old[0].length; k++){
-                            grid_old[j][k] -= temp_grid[j][k];
-                            count += temp_grid[j][k];
-                        }
-                    }
-                    total_old += count;
-                }
+                boolean left = false;
+                boolean right = false;
                 while(formsASet(grid_new, colorI, valI)){
                     short[] bestSet = bestSet(grid_new, colorI, valI);
                     short[][] temp_grid = gridize(bestSet, colorI, valI);
@@ -74,9 +63,21 @@ public class TileGroup {
                             count += temp_grid[j][k];
                         }
                     }
+                    left = valI > 0 ? grid_new[colorI][valI - 1] >= 1 : grid_new[colorI][Tile.TILES_PER_COLOR - 1] >= 1;
+                    right = valI < Tile.TILES_PER_COLOR - 1 ? grid_new[colorI][valI + 1] >= 1 : grid_new[colorI][0] >= 1;
                     total_new += count;
                 }
-                scores[i] += total_new - total_old;
+                if(total_new > GROUP_MIN_COUNT_CONDITION){ //Two cases. Case1: not forming a new group, just increasing the group's size. Case2: middle tile.
+                    if(left && right){ //middle tile
+                        scores[i] += total_new;
+                    }
+                    else{
+                        scores[i] += 1; //widening the group, i.e. increasing the group size.
+                    }
+                }
+                else{
+                    scores[i] += total_new;
+                }
             }
         }
         return scores[scores.length  - 1];
@@ -128,40 +129,52 @@ public class TileGroup {
      * For consec. sets, return length is 2, [0]->lowestIndex, [1]=highestIndex; For color sets, it's length of 4, each index denoting involved colors with 0/1. For bidirectional(both conseq. and color) sets, it's length is 6; which is [0,1]->horizontal, [2..5]->vertical
      */
     public short[] bestSet(short[][] grid, int colorIndex, int valueIndex){
-        if(grid[colorIndex][valueIndex] == 0)
+        if(grid[colorIndex][valueIndex] == 0) //return null if there is no tile in the given index.
             return null;
+        int consecutiveTotal;
+        int specialCaseTotal = 0; //Special Case: {..12,13,1}
+        int colorCount = 0;
         int low = valueIndex;
         int high = valueIndex;
         while(low >= 1 && grid[colorIndex][low - 1] >= 1)
             low--;
         while(high < Tile.TILES_PER_COLOR - 1 && grid[colorIndex][high + 1] >= 1)
             high++;
-        int consequtiveTotal = high - low + 1;
+        consecutiveTotal = high - low + 1;
         if (high == Tile.TILES_PER_COLOR - 1 && grid[colorIndex][0] >= 1){
-            consequtiveTotal++;
+            consecutiveTotal++;
             high = 0;
         }
-        int specialCaseLow = Tile.TILES_PER_COLOR - 1;
-        int specialCaseHigh = 0;
-        while(specialCaseLow >= 1 && grid[colorIndex][specialCaseLow - 1] >= 1)
-            specialCaseLow--;
-        int specialCaseTotal = Tile.TILES_PER_COLOR - specialCaseLow + 1;
+        int specialCaseLow = -1;
+        int specialCaseHigh = -1;
+        if(grid[colorIndex][0] == 1 && grid[colorIndex][Tile.TILES_PER_COLOR - 1] == 1){ //minimal condition{12,13,1} for special case.
+            specialCaseLow = Tile.TILES_PER_COLOR - 1;
+            specialCaseHigh = 0;
+            while(specialCaseLow >= 1 && grid[colorIndex][specialCaseLow - 1] >= 1)
+                specialCaseLow--;
+            specialCaseTotal = Tile.TILES_PER_COLOR - specialCaseLow + 1;
+        }
+
         short[] colorGrid = new short[Tile.Color.values().length - 1];
-        int colorCount = 0;
+
         for(int i = 0; i < Tile.Color.values().length - 1; i++) {
             if (grid[i][valueIndex] == 1) {
                 colorGrid[i] = 1;
                 colorCount++;
             }
         }
+        //Another special case: both horizontal and vertical.
         if(colorCount > GROUP_MIN_COUNT_CONDITION){
-            if (consequtiveTotal > specialCaseTotal && consequtiveTotal >= GROUP_MIN_COUNT_CONDITION){
-                short[] res = new short[2 + colorGrid.length];
-                res[0] = (short)low;
-                res[1] = (short)high;
-                System.arraycopy(colorGrid, 0, res, 2, colorGrid.length);
-                return res;
-            }else if(specialCaseTotal >  consequtiveTotal && specialCaseTotal >= GROUP_MIN_COUNT_CONDITION){
+            if(consecutiveTotal >= specialCaseTotal) {
+                if(consecutiveTotal >= GROUP_MIN_COUNT_CONDITION){
+                    short[] res = new short[2 + colorGrid.length];
+                    res[0] = (short)low;
+                    res[1] = (short)high;
+                    System.arraycopy(colorGrid, 0, res, 2, colorGrid.length);
+                    return res;
+                }
+            }
+            else if(specialCaseTotal >= GROUP_MIN_COUNT_CONDITION){
                 short[] res = new short[2 + colorGrid.length];
                 res[0] = (short)specialCaseLow;
                 res[1] = (short)specialCaseHigh;
@@ -169,14 +182,42 @@ public class TileGroup {
                 return res;
             }
         }
-        if (consequtiveTotal > specialCaseTotal){
-            if (consequtiveTotal > colorCount){
+
+        //Normal case: hortizontal or vertical.
+        if(colorCount >= consecutiveTotal){
+            if(colorCount >= specialCaseTotal){ //max: colorCount
+                return colorGrid;
+            }
+        }else if(consecutiveTotal >= specialCaseTotal){ //max: consequtiveTotal
+            return new short[]{(short) low, (short) high};
+        }else{ //max:specialCaseTotal
+            return new short[]{(short) specialCaseLow, (short) specialCaseLow};
+        }
+        return null;
+        /*
+        if(colorCount > GROUP_MIN_COUNT_CONDITION){
+            if (consecutiveTotal > specialCaseTotal && consecutiveTotal >= GROUP_MIN_COUNT_CONDITION){
+                short[] res = new short[2 + colorGrid.length];
+                res[0] = (short)low;
+                res[1] = (short)high;
+                System.arraycopy(colorGrid, 0, res, 2, colorGrid.length);
+                return res;
+            }else if(specialCaseTotal >  consecutiveTotal && specialCaseTotal >= GROUP_MIN_COUNT_CONDITION){
+                short[] res = new short[2 + colorGrid.length];
+                res[0] = (short)specialCaseLow;
+                res[1] = (short)specialCaseHigh;
+                System.arraycopy(colorGrid, 0, res, 2, colorGrid.length);
+                return res;
+            }
+        }
+        if (consecutiveTotal > specialCaseTotal){
+            if (consecutiveTotal > colorCount){
                 return new short[]{(short) low, (short) high};
             }
             return new short[]{(short) specialCaseLow, (short) specialCaseLow};
         }
-        //There will be another case here. For example [Red (3,4,5)] + [(Yellow, Black,Blue)5] it will be implemented later!
-        return colorGrid;
+        */
+
     }
 
     /**
