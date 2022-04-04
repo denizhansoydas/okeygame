@@ -9,6 +9,9 @@ import java.util.ArrayList;
 public class Tester {
     public static void main(String[] args) {
         System.out.println("Started.");
+//        for(int i = 0; i < 1000; i++){
+//            Game game = new Game();
+//        }
         Game game = new Game();
 
         //test

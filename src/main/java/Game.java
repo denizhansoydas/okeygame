@@ -46,6 +46,7 @@ public class Game {
         for (Player player : players) {
             TileGroup playersTiles = new TileGroup(this, player.getBoard());
             System.out.println("Player " + player.getName() +" has " + player.getBoard().size() + " tiles: " + player.getBoard());
+            playersTiles.putJokersAtTheEnd();
             System.out.println("Player has score: " + playersTiles.getScore());
             if(playersTiles.getScore() > score){
                 score = playersTiles.getScore();

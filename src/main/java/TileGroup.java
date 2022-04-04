@@ -46,16 +46,19 @@ public class TileGroup {
     public int getScore(){
         ArrayList<Tile> tiles_copy = new ArrayList<>(tiles);
         short[][] grid = new short[Tile.Color.values().length - 1][Tile.TILES_PER_COLOR];
+        Tile first_joker = null;
+        if(getJokerStartIndex() != -1){
+            first_joker = tiles.get(getJokerStartIndex());
+        }
+
         int[] scores = new int[tiles_copy.size() + 1];
-         scores[0] = 0;
-        for(int i = 1; !tiles_copy.isEmpty(); i++){
+        scores[0] = 0;
+        int i = 1;
+        for(; !tiles_copy.isEmpty() && tiles_copy.get(0) != first_joker; i++){
             //scoring function of Dynamic Programming.
             scores[i] = scores[i - 1];
             Tile tile = tiles_copy.remove(0);
 
-
-
-            short[][] grid_old = TileGroup.deepCopy(grid);
             int colorI;
             int valI;
             if(tile.isFakeJoker()){
@@ -99,6 +102,83 @@ public class TileGroup {
                 }
             }
         }
+        int[][] bestPlacesForJokers = {{-1,-1}, {-1,-1}}; //For both jokers, in format:{colorIndex,valueIndex}.
+        for(; !tiles_copy.isEmpty(); i++){
+            scores[i] = scores[i - 1];
+            Tile tile = tiles_copy.remove(0);
+            short[][] grid_copy = TileGroup.deepCopy(grid);
+            int bestColorI = 0;
+            int bestValI = 0;
+            int bestScore = 0;
+            for(int colorI = 0; colorI < grid_copy.length; colorI++){
+                for(int valI = 0; valI < grid_copy[0].length; valI++){
+                    grid_copy[colorI][valI]++;
+                    if(formsASet(grid_copy, colorI, valI)){
+                        int total_new = 0;
+                        boolean left = false;
+                        boolean right = false;
+                        while(formsASet(grid_copy, colorI, valI)){
+                            short[] bestSet = bestSet(grid_copy, colorI, valI);
+                            short[][] temp_grid = gridize(bestSet, colorI, valI);
+                            int count = 0;
+                            for(int j = 0; j < grid_copy.length; j++){
+                                for(int k = 0; k < grid_copy[0].length; k++){
+                                    grid_copy[j][k] -= temp_grid[j][k];
+                                    count += temp_grid[j][k];
+                                }
+                            }
+                            left = valI > 0 ? grid_copy[colorI][valI - 1] >= 1 : grid_copy[colorI][Tile.TILES_PER_COLOR - 1] >= 1;
+                            right = valI < Tile.TILES_PER_COLOR - 1 ? grid_copy[colorI][valI + 1] >= 1 : grid_copy[colorI][0] >= 1;
+                            total_new += count;
+                        }
+                        int curScore = 0;
+                        if(total_new > GROUP_MIN_COUNT_CONDITION){
+                            if(left && right){
+                                curScore = scores[i] + total_new;
+                            }
+                            else{
+                                curScore = scores[i] + 1;
+                            }
+                        }else{
+                            curScore = scores[i] + total_new;
+                        }
+                        if(curScore > bestScore){
+                            bestScore = curScore;
+                            bestColorI = colorI;
+                            bestValI = valI;
+                        }
+                    }
+                }
+            }
+            scores[i] = bestScore;
+            if(bestPlacesForJokers[0][0] == -1){ //meaning its empty.
+                bestPlacesForJokers[0][0] = bestColorI;
+                bestPlacesForJokers[0][1] = bestValI;
+            }
+            else{
+                bestPlacesForJokers[1][0] = bestColorI;
+                bestPlacesForJokers[1][1] = bestValI;
+            }
+        }
+        //remove the jokers from the grid.
+        int jokerCount = getJokerCount();
+        if(bestPlacesForJokers[0][0] != -1)
+            grid[bestPlacesForJokers[0][0]][bestPlacesForJokers[0][1]]--;
+        if(bestPlacesForJokers[1][0] != -1)
+            grid[bestPlacesForJokers[1][0]][bestPlacesForJokers[1][1]]--;
+        int duplicateCount = 0;
+        for(int j = 0; j < grid.length; j++){
+            for(int k = 0; k < grid[0].length; k++){
+                duplicateCount += grid[j][k] / 2;
+            }
+        }
+        duplicateCount *= 2;
+        duplicateCount += 2 * jokerCount;
+        if(duplicateCount > scores[scores.length - 1]){
+            if (duplicateCount > Game.WINNING_SCORE)
+                return Game.WINNING_SCORE;
+            return duplicateCount;
+        }
         return scores[scores.length  - 1];
     }
     /**
@@ -120,12 +200,35 @@ public class TileGroup {
         return results;
     }
     /**
+     * This method returns the index of the starting index of jokers in the group.
+     * Note: This method should be used after putting jokers to the end.(i.e. after using putJokersAtTheEnd() method.)
+     * @return starting index of the jokers
+     */
+    public int getJokerStartIndex(){
+        Tile[] jokers = findTile(game.getJokerColor(), game.getJokerValue());
+        if(jokers[0] != null)
+            return tiles.indexOf(jokers[0]);
+        return -1;
+    }
+    /**
+     * This method returns the number of jokers in the group.
+     * @return number of jokers in the group.
+     */
+    public int getJokerCount(){
+        int count = 0;
+        for(Tile tile : tiles)
+            if(tile.getNo() == game.getJokerNo())
+                count++;
+        return count;
+    }
+    /**
      * This methods shows whether a given tile may form up a set with the neighbour tiles(consecutive or same color)
      * @param grid situation of the board, a color*value grid that denotes every tile.
      * @param colorIndex color index of the tile.
      * @param valueIndex value index of the tile.
      * @return whether the given tile may form up a set or not.
      */
+
     public boolean formsASet(short[][] grid, int colorIndex, int valueIndex){
         if(grid[colorIndex][valueIndex] < 1)
             return false;
@@ -289,5 +392,20 @@ public class TileGroup {
             }
         }
         return res;
+    }
+    public ArrayList<Tile> getTiles() {
+        return tiles;
+    }
+    /**
+     * This method only puts the Jokers to the end of the group.
+     */
+    public void putJokersAtTheEnd(){
+        Tile[] jokers = findTile(game.getJokerColor(), game.getJokerValue());
+        for(Tile tile: jokers){
+            if(tile != null){
+                tiles.remove(tile);
+                tiles.add(tile);
+            }
+        }
     }
 }
