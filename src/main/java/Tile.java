@@ -3,7 +3,7 @@ import java.util.Arrays;
 /**
  * This class is for a single Tile item in the game.
  * @author Denizhan Soydas
- * @version 1.1
+ * @version 1.2
  */
 public class Tile{
     //static properties, methods and enumerations
@@ -42,7 +42,7 @@ public class Tile{
             throw new WrongColorException(no);
     }
     public Tile(Color color, int tileValue) throws WrongColorException{
-        this(TILES_PER_COLOR * Arrays.asList(Color.values()).indexOf(color) + tileValue);
+        this(TILES_PER_COLOR * Arrays.asList(Color.values()).indexOf(color) + tileValue - 1);
     }
 
     //methods
