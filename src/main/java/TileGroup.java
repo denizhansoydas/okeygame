@@ -148,6 +148,7 @@ public class TileGroup {
                             bestValI = valI;
                         }
                     }
+                grid_copy[colorI][valI]--;
                 }
             }
             scores[i] = bestScore;

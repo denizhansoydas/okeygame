@@ -42,7 +42,7 @@ public class Tile{
             throw new WrongColorException(no);
     }
     public Tile(Color color, int tileValue) throws WrongColorException{
-        this(TILES_PER_COLOR * Arrays.asList(Color.values()).indexOf(color) + tileValue);
+        this(TILES_PER_COLOR * Arrays.asList(Color.values()).indexOf(color) + tileValue - 1);
     }
 
     //methods
