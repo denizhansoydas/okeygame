@@ -3,7 +3,7 @@ import java.util.Arrays;
 /**
  * This class is for a single Tile item in the game.
  * @author Denizhan Soydas
- * @version 1.1
+ * @version 1.2
  */
 public class Tile{
     //static properties, methods and enumerations

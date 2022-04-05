@@ -4,7 +4,7 @@ import java.util.Arrays;
 /**
  * This class is for groups of tiles that is on the board of a user.
  * @author Denizhan Soydas
- * @version 1.1
+ * @version 1.2
  */
 public class TileGroup {
     //static properties and methods
